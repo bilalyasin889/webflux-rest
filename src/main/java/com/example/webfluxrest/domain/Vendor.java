@@ -7,15 +7,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * @author Bilal Yasin
  */
+
 @Data
 @Document
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Vendor {
 
     @Id
     private String id;
 
-    private String description;
+    private String firstName;
+    private String lastName;
 }
