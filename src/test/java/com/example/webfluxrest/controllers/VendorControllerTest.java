@@ -1,7 +1,7 @@
 package com.example.webfluxrest.controllers;
 
-import com.example.webfluxrest.domain.Category;
-import com.example.webfluxrest.repositories.CategoryRepository;
+import com.example.webfluxrest.domain.Vendor;
+import com.example.webfluxrest.repositories.VendorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -10,40 +10,40 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class CategoryControllerTest {
+class VendorControllerTest {
 
     WebTestClient webTestClient;
-    CategoryRepository repository;
-    CategoryController controller;
+    VendorRepository repository;
+    VendorController controller;
 
     @BeforeEach
     void setUp() {
-        repository = Mockito.mock(CategoryRepository.class);
-        controller = new CategoryController(repository);
+        repository = Mockito.mock(VendorRepository.class);
+        controller = new VendorController(repository);
         webTestClient = WebTestClient.bindToController(controller).build();
     }
 
     @Test
     void list() {
         BDDMockito.given(repository.findAll())
-                .willReturn(Flux.just(Category.builder().description("Cat1").build(),
-                        Category.builder().description("Cat2").build()));
+                .willReturn(Flux.just(Vendor.builder().firstName("Fred").lastName("Flintstone").build(),
+                        Vendor.builder().firstName("Barney").lastName("Rubble").build()));
 
         webTestClient.get()
-                .uri("/api/v1/categories/")
+                .uri("/api/v1/vendors")
                 .exchange()
-                .expectBodyList(Category.class)
+                .expectBodyList(Vendor.class)
                 .hasSize(2);
     }
 
     @Test
     void getById() {
         BDDMockito.given(repository.findById("someid"))
-                .willReturn(Mono.just(Category.builder().description("Cat").build()));
+                .willReturn(Mono.just(Vendor.builder().firstName("Jimmy").lastName("Johns").build()));
 
         webTestClient.get()
-                .uri("/api/v1/categories/someid")
+                .uri("/api/v1/vendors/someid")
                 .exchange()
-                .expectBody(Category.class);
+                .expectBody(Vendor.class);
     }
 }
