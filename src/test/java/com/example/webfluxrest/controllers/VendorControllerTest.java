@@ -4,7 +4,6 @@ import com.example.webfluxrest.domain.Vendor;
 import com.example.webfluxrest.repositories.VendorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -12,6 +11,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class VendorControllerTest {
 
@@ -28,8 +31,8 @@ class VendorControllerTest {
 
     @Test
     void list() {
-        BDDMockito.given(repository.findAll())
-                .willReturn(Flux.just(Vendor.builder().firstName("Fred").lastName("Flintstone").build(),
+        given(repository.findAll())
+                .willReturn(Flux.just(Vendor.builder().firstName("Fred").lastName("Flint-stone").build(),
                         Vendor.builder().firstName("Barney").lastName("Rubble").build()));
 
         webTestClient.get()
@@ -41,21 +44,21 @@ class VendorControllerTest {
 
     @Test
     void getById() {
-        BDDMockito.given(repository.findById("someid"))
+        given(repository.findById("someId"))
                 .willReturn(Mono.just(Vendor.builder().firstName("Jimmy").lastName("Johns").build()));
 
         webTestClient.get()
-                .uri("/api/v1/vendors/someid")
+                .uri("/api/v1/vendors/someId")
                 .exchange()
                 .expectBody(Vendor.class);
     }
 
     @Test
     public void create() {
-        BDDMockito.given(repository.saveAll(any(Publisher.class)))
+        given(repository.saveAll(any(Publisher.class)))
                 .willReturn(Flux.just(Vendor.builder().build()));
 
-        Mono<Vendor> vendorToSaveMono = Mono.just(Vendor.builder().firstName("Jessie").lastName("Pinkman").build());
+        Mono<Vendor> vendorToSaveMono = Mono.just(Vendor.builder().firstName("Jessie").lastName("Pink-man").build());
 
         webTestClient.post()
                 .uri("/api/v1/vendors")
@@ -67,16 +70,56 @@ class VendorControllerTest {
 
     @Test
     public void update() {
-        BDDMockito.given(repository.save(any(Vendor.class)))
+        given(repository.save(any(Vendor.class)))
                 .willReturn(Mono.just(Vendor.builder().build()));
 
         Mono<Vendor> vendorToUpdateMono = Mono.just(Vendor.builder().build());
 
         webTestClient.put()
-                .uri("/api/v1/vendors/someid")
+                .uri("/api/v1/vendors/someId")
                 .body(vendorToUpdateMono, Vendor.class)
                 .exchange()
                 .expectStatus()
                 .isOk();
+    }
+
+    @Test
+    public void patchWithChanges() {
+        given(repository.findById(anyString()))
+                .willReturn(Mono.just(Vendor.builder().firstName("Jimmy").build()));
+
+        given(repository.save(any(Vendor.class)))
+                .willReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToUpdateMono = Mono.just(Vendor.builder().firstName("Jim").build());
+
+        webTestClient.patch()
+                .uri("/api/v1/vendors/someId")
+                .body(vendorToUpdateMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(repository).save(any());
+    }
+
+    @Test
+    public void patchWithNoChanges() {
+        given(repository.findById(anyString()))
+                .willReturn(Mono.just(Vendor.builder().firstName("Jimmy").build()));
+
+        given(repository.save(any(Vendor.class)))
+                .willReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToUpdateMono = Mono.just(Vendor.builder().firstName("Jimmy").build());
+
+        webTestClient.patch()
+                .uri("/api/v1/vendors/someId")
+                .body(vendorToUpdateMono, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(repository, never()).save(any());
     }
 }

@@ -32,7 +32,7 @@ public class VendorController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/v1/vendors")
-    Mono<Void> create(@RequestBody Publisher<Vendor> vendorStream){
+    Mono<Void> create(@RequestBody Publisher<Vendor> vendorStream) {
         return vendorRepository.saveAll(vendorStream).then();
     }
 
@@ -41,4 +41,25 @@ public class VendorController {
         vendor.setId(id);
         return vendorRepository.save(vendor);
     }
+
+    @PatchMapping("/api/v1/vendors/{id}")
+    Mono<Vendor> patch(@PathVariable String id, @RequestBody Vendor vendor) {
+        Vendor foundVendor = vendorRepository.findById(id).block();
+
+        if (vendor.getFirstName() != null) {
+            if (!foundVendor.getFirstName().equals(vendor.getFirstName())) {
+                foundVendor.setFirstName(vendor.getFirstName());
+                return vendorRepository.save(foundVendor);
+            }
+        }
+        if (vendor.getLastName() != null) {
+            if (!foundVendor.getLastName().equals(vendor.getFirstName())) {
+                foundVendor.setLastName(vendor.getFirstName());
+                return vendorRepository.save(foundVendor);
+            }
+        }
+        return Mono.just(foundVendor);
+
+    }
+
 }
