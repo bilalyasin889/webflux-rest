@@ -6,9 +6,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static org.mockito.ArgumentMatchers.any;
 
 class CategoryControllerTest {
 
@@ -46,4 +49,35 @@ class CategoryControllerTest {
                 .exchange()
                 .expectBody(Category.class);
     }
+
+    @Test
+    public void create() {
+        BDDMockito.given(repository.saveAll(any(Publisher.class)))
+                .willReturn(Flux.just(Category.builder().description("descrp").build()));
+
+        Mono<Category> catToSaveMono = Mono.just(Category.builder().description("Some Cat").build());
+
+        webTestClient.post()
+                .uri("/api/v1/categories")
+                .body(catToSaveMono, Category.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
+    }
+
+    @Test
+    public void TestUpdate() {
+        BDDMockito.given(repository.save(any(Category.class)))
+                .willReturn(Mono.just(Category.builder().build()));
+
+        Mono<Category> catToUpdateMono = Mono.just(Category.builder().description("Some Cat").build());
+
+        webTestClient.put()
+                .uri("/api/v1/categories/asdfasdf")
+                .body(catToUpdateMono, Category.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+    }
+
 }
